@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <AssemblyName>UnicodeDetox</AssemblyName>
+    <RootNamespace>Brx.UnicodeDetox</RootNamespace>
+    <CLSCompliant>true</CLSCompliant>
+
+    <AssemblyTitle>UnicodeDetox</AssemblyTitle>
+    <Company>N/A</Company>
+    <Product>UnicodeDetox</Product>
+    <Copyright>Copyright (C) 2026 Daniel Vargha</Copyright>
+
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <NoWarn>$(NoWarn);1591;IDE0130</NoWarn>
+
+    <StartupObject>Brx.UnicodeDetox.Program</StartupObject>
+
+  </PropertyGroup>
+
+</Project>
