@@ -207,12 +207,7 @@ public sealed partial class UnicodeDetoxConverter
             ch1 = ch0;
             ch0 = span[i];
 
-            if (ch1 == '\\')
-            {
-               // if previous char was '\\' then ch is escaped and should be treated as text
-               writer.Write(ch0);
-            }
-            else if (ch1 == EM_DASH)
+            if (ch1 == EM_DASH)
             {
                // if previous char was emdash, we have not written it yet
                if (NonZeroWidthSpaces.Contains(ch2) && NonZeroWidthSpaces.Contains(ch0))
@@ -224,54 +219,57 @@ public sealed partial class UnicodeDetoxConverter
                   writer.Write(" - ");
                }
             }
-            else if (ch0 == '`')
+
+            if (ch0 == '`' && ch1 != '\\')
             {
+               // unescaped tick -> write to the output and start counting how many we have in a row
                writer.Write(ch0);
                currentTickCount++;
+               continue;
+            }
+
+            if (currentTickCount > 0)
+            {
+               // end of tick run
+               if (!isInlineCode)
+               {
+                  if (FindTickRun(c, span, i + 1, currentTickCount))
+                  {
+                     // we have a matching tick run before the end of the line -> enter inline code
+                     openingTickCount = currentTickCount;
+                     isInlineCode = true;
+                  }
+               }
+               else if (openingTickCount == currentTickCount)
+               {
+                  // same number of tick as the opening run -> found proper closing for the inline run
+                  isInlineCode = false;
+               }
+               // reset tick count
+               currentTickCount = 0;
+            }
+
+            if (isInlineCode || ch0 < 0x80)
+            {
+               // we are in an inline code section or ch0 is ASCII -> do not detox
+               writer.Write(ch0);
+            }
+            else if (ch0 == EM_DASH)
+            {
+               // we will write the emdash in the next round when we know what the next character is
+               continue;
+            }
+            else if (AsciiMap.TryGetValue(ch0, out var detox))
+            {
+               writer.Write(detox);
             }
             else
             {
-               if (currentTickCount > 0)
-               {
-                  if (!isInlineCode)
-                  {
-                     if (FindTickRun(c, span, i + 1, currentTickCount))
-                     {
-                        // we have a matching tick run before the end of the line -> enter inline code
-                        openingTickCount = currentTickCount;
-                        isInlineCode = true;
-                     }
-                  }
-                  else if (openingTickCount == currentTickCount)
-                  {
-                     // same number of tick as the opening run -> found proper closing for the inline run
-                     isInlineCode = false;
-                  }
-                  // reset tick count
-                  currentTickCount = 0;
-               }
-
-               if (isInlineCode || ch0 < 0x80)
-               {
-                  // we are in an inline code section or ch0 is ASCII -> do not detox
-                  writer.Write(ch0);
-               }
-               else if (ch0 == EM_DASH)
-               {
-                  // we will write the emdash in the next round when we know what the next character is
-                  continue;
-               }
-               else if (AsciiMap.TryGetValue(ch0, out var detox))
-               {
-                  writer.Write(detox);
-               }
-               else
-               {
-                  writer.Write(ch0);
-               }
+               writer.Write(ch0);
             }
          }
       }
+
       _lineChunks.Clear();
 
       if (ch0 == EM_DASH) writer.Write(EM_DASH);
