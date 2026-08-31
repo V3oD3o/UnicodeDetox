@@ -142,6 +142,10 @@ public sealed partial class UnicodeDetoxConverter
                }
                break;
          }
+         if (_hasCR || _hasLF)
+         {
+            FlushLine(writer);
+         }
          _lineBuffer.Append(ch);
       }
    }
