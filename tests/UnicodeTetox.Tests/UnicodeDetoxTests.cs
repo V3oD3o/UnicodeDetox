@@ -36,26 +36,31 @@ public class UnicodeDetoxTests
    // ---------------------------------------------------------
    // EM-dash normalization (U+2014)
    // ---------------------------------------------------------
-   [TestCase("foo\u2014bar", "foo - bar", "sticky: 'foo—bar'")]
-   [TestCase("\u2014bar", "- bar", "sticky: '—bar'")]
-   [TestCase("foo\u2014", "foo -", "sticky: 'foo—'")]
+   [TestCase("\u2014", "-", "standalone: '-'")]
+   [TestCase("\u2014\u2014", "--", "multi standalone: '--'")]
+   [TestCase("\u2014\u2014\u2014", "---", "multi standalone: '---'")]
+   [TestCase("foo\u2014bar", "foo - bar", "sticky: 'foo-bar'")]
+   [TestCase("\u2014bar", "- bar", "sticky: '-bar'")]
+   [TestCase("foo\u2014", "foo -", "sticky: 'foo-'")]
+   [TestCase("\u2014b", "- b", "sticky: '-b'")]
+   [TestCase("f\u2014", "f -", "sticky: 'f-'")]
 
-   [TestCase("foo \u2014 bar", "foo - bar", "padded: 'foo — bar'")]
-   [TestCase("foo \u2014", "foo -", "padded: 'foo —'")]
-   [TestCase("\u2014 bar", "- bar", "padded: '— bar'")]
+   [TestCase("foo \u2014 bar", "foo - bar", "padded: 'foo - bar'")]
+   [TestCase("foo \u2014", "foo -", "padded: 'foo -'")]
+   [TestCase("\u2014 bar", "- bar", "padded: '- bar'")]
 
-   [TestCase("foo\u2014 bar", "foo- bar", "half-sticky: 'foo— bar'")]
-   [TestCase("foo \u2014bar", "foo -bar", "half-sticky: 'foo —bar'")]
+   [TestCase("foo\u2014 bar", "foo- bar", "half-sticky: 'foo- bar'")]
+   [TestCase("foo \u2014bar", "foo -bar", "half-sticky: 'foo -bar'")]
 
-   [TestCase("foo\u2014\u2014bar", "foo -- bar", "multi sticky: 'foo——bar'")]
-   [TestCase("foo \u2014\u2014 bar", "foo -- bar", "multi padded: 'foo —— bar'")]
-   [TestCase("foo \u2014\u2014bar", "foo --bar", "multi half-sticky: 'foo ——bar'")]
-   [TestCase("foo\u2014\u2014 bar", "foo-- bar", "multi half-sticky: 'foo—— bar'")]
+   [TestCase("foo\u2014\u2014bar", "foo -- bar", "multi sticky: 'foo--bar'")]
+   [TestCase("foo \u2014\u2014 bar", "foo -- bar", "multi padded: 'foo -- bar'")]
+   [TestCase("foo \u2014\u2014bar", "foo --bar", "multi half-sticky: 'foo --bar'")]
+   [TestCase("foo\u2014\u2014 bar", "foo-- bar", "multi half-sticky: 'foo-- bar'")]
 
-   [TestCase("foo\u2014 \u2014bar", "foo- -bar", "mixed: 'foo— —bar'")]
-   [TestCase("foo \u2014 \u2014 bar", "foo - - bar", "mixed: 'foo — — bar'")]
-   [TestCase("foo\u2014 \u2014 bar", "foo- - bar", "mixed: 'foo— — bar'")]
-   [TestCase("foo \u2014 \u2014bar", "foo - -bar", "mixed: 'foo — —bar'")]
+   [TestCase("foo\u2014 \u2014bar", "foo- -bar", "mixed: 'foo- -bar'")]
+   [TestCase("foo \u2014 \u2014 bar", "foo - - bar", "mixed: 'foo - - bar'")]
+   [TestCase("foo\u2014 \u2014 bar", "foo- - bar", "mixed: 'foo- - bar'")]
+   [TestCase("foo \u2014 \u2014bar", "foo - -bar", "mixed: 'foo - -bar'")]
    public void EmdashNormalization(string input, string expected, string description)
    {
       Assert.That(UnicodeDetox.Detox(input), Is.EqualTo(expected), description);

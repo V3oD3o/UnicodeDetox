@@ -182,7 +182,7 @@ public sealed partial class UnicodeDetoxConverter
    {
       if (ch == EM_DASH)
       {
-         return DetoxString.DASH_WITH_SPACES;
+         return DetoxString.DASH;
       }
       else if (ch >= 0x80 && DetoxMap.TryGetValue(ch, out var result)) 
       {
@@ -453,7 +453,7 @@ public sealed partial class UnicodeDetoxConverter
 
       if (pendingEmDashCount > 0)
       {
-         if (!NonZeroWidthSpaces.Contains(ch1))
+         if ((pos1 + 2 > pendingEmDashCount) && !NonZeroWidthSpaces.Contains(ch1))
          {
             // insert padding before
             writer.Write(' ');
