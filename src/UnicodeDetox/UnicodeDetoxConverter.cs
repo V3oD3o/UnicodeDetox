@@ -8,45 +8,131 @@ namespace Brx.UnicodeDetox;
 
 public sealed partial class UnicodeDetoxConverter
 {
-   public const char EM_DASH = '\u2014';
+   private const char EM_DASH = '\u2014';
+
+   private static class DetoxString
+   {
+      public const string QUOTATION_MARK = "\"";
+      public const string APOSTROPHE = "'";
+      public const string ANGLE_BRACKET_L = "<";
+      public const string ANGLE_BRACKET_R = "<";
+      public const string DBL_ANGLE_BRACKET_L = "<<";
+      public const string DBL_ANGLE_BRACKET_R = "<<";
+      public const string DASH = "-";
+      public const string DBL_DASH = "--";
+      public const string DASH_WITH_SPACES = " - ";
+      public const string ASTERISK = "*";
+      public const string TRIPLE_DOT = "...";
+      public const string ARROW_L = "<-";
+      public const string ARROW_R = "->";
+      public const string ARROW_LR = "<->";
+      public const string DBL_ARROW_L = "<=";
+      public const string DBL_ARROW_R = "=>";
+      public const string DBL_ARROW_LR = "<=>";
+      public const string PIPE = "|";
+      public const string SLASH = "/";
+      public const string BACKSLASH = "\\";
+   }
 
    // Mapping table for typographic Unicode -> ASCII
-   private static readonly Dictionary<char, string> AsciiMap = new Dictionary<char, string>()
+   private static readonly Dictionary<char, string> DetoxMap = new Dictionary<char, string>()
    {
-      ['\u201C'] = "\"",   // LEFT DOUBLE QUOTATION MARK
-      ['\u201D'] = "\"",   // RIGHT DOUBLE QUOTATION MARK
-      ['\u2018'] = "'",    // LEFT SINGLE QUOTATION MARK
-      ['\u2019'] = "'",    // RIGHT SINGLE QUOTATION MARK
+      // English typographic quotes
+      ['\u201C'] = DetoxString.QUOTATION_MARK,        // LEFT DOUBLE QUOTATION MARK
+      ['\u201D'] = DetoxString.QUOTATION_MARK,        // RIGHT DOUBLE QUOTATION MARK
+      ['\u2018'] = DetoxString.APOSTROPHE,            // LEFT SINGLE QUOTATION MARK
+      ['\u2019'] = DetoxString.APOSTROPHE,            // RIGHT SINGLE QUOTATION MARK
 
-      ['\u2013'] = "-",    // EN DASH
+      // Low-9 quotes (German, Hungarian, Czech, etc.)
+      ['\u201E'] = DetoxString.QUOTATION_MARK,        // DOUBLE LOW-9 QUOTATION MARK
+      ['\u201A'] = DetoxString.APOSTROPHE,            // SINGLE LOW-9 QUOTATION MARK
 
-      ['\u2026'] = "...",  // HORIZONTAL ELLIPSIS
+      // Reversed / high quotes
+      ['\u201B'] = DetoxString.APOSTROPHE,            // SINGLE HIGH-REVERSED-9 QUOTATION MARK
+      ['\u201F'] = DetoxString.QUOTATION_MARK,        // DOUBLE HIGH-REVERSED-9 QUOTATION MARK
 
-      ['\u2022'] = "*",    // BULLET
-      ['\u00B7'] = "*",    // MIDDLE DOT
+      // Heavy ornamental quotes
+      ['\u275B'] = DetoxString.APOSTROPHE,            // HEAVY SINGLE TURNED COMMA QUOTATION MARK
+      ['\u275C'] = DetoxString.APOSTROPHE,            // HEAVY SINGLE COMMA QUOTATION MARK
+      ['\u275D'] = DetoxString.QUOTATION_MARK,        // HEAVY DOUBLE TURNED COMMA QUOTATION MARK
+      ['\u275E'] = DetoxString.QUOTATION_MARK,        // HEAVY DOUBLE COMMA QUOTATION MARK
 
-      ['\u2192'] = "->",   // RIGHTWARDS ARROW
-      ['\u2190'] = "<-",   // LEFTWARDS ARROW
-      ['\u2194'] = "<->",  // LEFT RIGHT ARROW
+      // Fullwidth compatibility quotes
+      ['\uFF02'] = DetoxString.QUOTATION_MARK,        // FULLWIDTH QUOTATION MARK
+      ['\uFF07'] = DetoxString.APOSTROPHE,            // FULLWIDTH APOSTROPHE
 
-      ['\u2713'] = "[OK]", // CHECK MARK
-      ['\u2717'] = "[X]",  // BALLOT X
+      // Prime-style quotes
+      ['\u2032'] = DetoxString.APOSTROPHE,            // PRIME
+      ['\u2033'] = DetoxString.QUOTATION_MARK,        // DOUBLE PRIME
+      ['\u301D'] = DetoxString.QUOTATION_MARK,        // REVERSED DOUBLE PRIME QUOTATION MARK
+      ['\u301E'] = DetoxString.QUOTATION_MARK,        // DOUBLE PRIME QUOTATION MARK
+      ['\u301F'] = DetoxString.QUOTATION_MARK,        // LOW DOUBLE PRIME QUOTATION MARK
 
-      ['\u2605'] = "*",    // BLACK STAR
-      ['\u2606'] = "*",    // WHITE STAR
+      // Rare reversed low quotes
+      ['\u2E42'] = DetoxString.QUOTATION_MARK,        // DOUBLE LOW-REVERSED-9 QUOTATION MARK
 
-      ['\u00D7'] = "x",    // MULTIPLICATION SIGN
-      ['\u00F7'] = "/",    // DIVISION SIGN
-      ['\u00AB'] = "<<",   // LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
-      ['\u00BB'] = ">>",   // RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
+      // French / Swiss guillemets
+      ['\u00AB'] = DetoxString.DBL_ANGLE_BRACKET_L,   // LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+      ['\u00BB'] = DetoxString.DBL_ANGLE_BRACKET_R,   // RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
+      ['\u2039'] = DetoxString.ANGLE_BRACKET_L,       // SINGLE LEFT-POINTING ANGLE QUOTATION MARK
+      ['\u203A'] = DetoxString.ANGLE_BRACKET_R,       // SINGLE RIGHT-POINTING ANGLE QUOTATION MARK
+
+      // Angle ornamental quotes
+      ['\u276E'] = DetoxString.ANGLE_BRACKET_L,       // HEAVY LEFT-POINTING ANGLE QUOTATION MARK
+      ['\u276F'] = DetoxString.ANGLE_BRACKET_R,       // HEAVY RIGHT-POINTING ANGLE QUOTATION MARK
+
+      // Dashes
+      ['\u2013'] = DetoxString.DASH,                  // EN DASH
+      ['\u2015'] = DetoxString.DBL_DASH,              // HORIZONTAL BAR
+      ['\u2212'] = DetoxString.DASH,                  // MINUS SIGN
+
+      // Ellipsis
+      ['\u2026'] = DetoxString.TRIPLE_DOT,            // HORIZONTAL ELLIPSIS
+
+      // Bullets
+      ['\u2022'] = DetoxString.ASTERISK,              // BULLET
+      ['\u00B7'] = DetoxString.ASTERISK,              // MIDDLE DOT
+      ['\u2605'] = DetoxString.ASTERISK,              // BLACK STAR
+      ['\u2606'] = DetoxString.ASTERISK,              // WHITE STAR
+      ['\u2219'] = DetoxString.ASTERISK,              // BULLET OPERATOR
+
+      // Arrows
+      ['\u2192'] = DetoxString.ARROW_R,               // RIGHTWARDS ARROW
+      ['\u2190'] = DetoxString.ARROW_L,               // LEFTWARDS ARROW
+      ['\u2194'] = DetoxString.ARROW_LR,              // LEFT RIGHT ARROW
+      ['\u21D2'] = DetoxString.DBL_ARROW_R,           // RIGHTWARDS DOUBLE ARROW
+      ['\u21D0'] = DetoxString.DBL_ARROW_L,           // LEFTWARDS DOUBLE ARROW
+      ['\u21D4'] = DetoxString.DBL_ARROW_LR,          // LEFT RIGHT DOUBLE ARROW
+
+      // Vertical separators
+      ['\u2758'] = DetoxString.PIPE,                  // LIGHT VERTICAL BAR
+      ['\u2759'] = DetoxString.PIPE,                  // MEDIUM VERTICAL BAR
+      ['\u275A'] = DetoxString.PIPE,                  // HEAVY VERTICAL BAR
+      ['\uFFE8'] = DetoxString.PIPE,                  // HALFWIDTH FORMS LIGHT VERTICAL
+      ['\uFF5C'] = DetoxString.PIPE,                  // FULLWIDTH VERTICAL LINE
+
+      // Slashes
+      ['\u00F7'] = DetoxString.SLASH,                 // DIVISION SIGN
+      ['\u2044'] = DetoxString.SLASH,                 // FRACTION SLASH
+      ['\u2215'] = DetoxString.SLASH,                 // DIVISION SLASH
+      ['\u2216'] = DetoxString.BACKSLASH,             // SET MINUS
+      ['\u29F5'] = DetoxString.BACKSLASH,             // REVERSE SOLIDUS OPERATOR
+      ['\u29F9'] = DetoxString.BACKSLASH,             // BIG REVERSE SOLIDUS
+      ['\uFF3C'] = DetoxString.BACKSLASH,             // FULLWIDTH REVERSE SOLIDUS
+
+      ['\u2713'] = "[OK]",                            // CHECK MARK
+      ['\u2717'] = "[X]",                             // BALLOT X
+
+      ['\u00D7'] = "x",                               // MULTIPLICATION SIGN
    };
 
    private static readonly HashSet<char> NonZeroWidthSpaces = new HashSet<char>()
    {
+      // Normal horizontal whitespace chars
        '\u0020',           // SPACE
        '\u0009',           // CHARACTER TABULATION
 
-       // --- Unicode Space_Separator (Zs) ---
+       // Unicode space separator (Zs)
        '\u00A0',           // NO-BREAK SPACE
        '\u1680',           // OGHAM SPACE MARK
        '\u2000',           // EN QUAD
@@ -62,17 +148,15 @@ public sealed partial class UnicodeDetoxConverter
        '\u200A',           // HAIR SPACE
        '\u202F',           // NARROW NO-BREAK SPACE
        '\u205F',           // MEDIUM MATHEMATICAL SPACE
-
-       // OPTIONAL:
-       // '\u3000',     // IDEOGRAPHIC SPACE (CJK full-width space)
+       
+       // Additional spaces
+       '\u3000',           // IDEOGRAPHIC SPACE (CJK full-width space)
    };
-
 
    [GeneratedRegex(@"^(?: {0,3})(?<fence>`{3,}|~{3,})(?<info>[^`]*?)\s*$", RegexOptions.Compiled)]
    private static partial Regex GetOpeningFencePattern();
    private static readonly Regex openingFencePattern = GetOpeningFencePattern();
    private static readonly int openingFenceGroupIndex = openingFencePattern.GroupNumberFromName("fence");
-
 
    [GeneratedRegex(@"^(?: {0,3})(?<fence>`{3,}|~{3,})\s*$", RegexOptions.Compiled)]
    private static partial Regex GetClosingFencePattern();
@@ -94,17 +178,55 @@ public sealed partial class UnicodeDetoxConverter
    private char _fenceChar;
    private int _fenceLength;
 
-   public void ResetLine()
+   public static string Convert(char ch)
    {
-      _lineBuffer.Clear();
-      _hasCR = false;
-      _hasLF = false;
-      _hasLeadingNonSyntax = false;
-      _hasBacktick = false;
-      _hasTilde = false;
+      if (ch == EM_DASH)
+      {
+         return DetoxString.DASH_WITH_SPACES;
+      }
+      else if (ch >= 0x80 && DetoxMap.TryGetValue(ch, out var result)) 
+      {
+         return result;
+      }
+      else
+      {
+         return ch.ToString();
+      }
+   }
+
+   public void Convert(string? value, TextWriter writer)
+   {
+      ArgumentNullException.ThrowIfNull(writer);
+      if (value != null)
+      {
+         ConvertUnchecked((ReadOnlySpan<char>)value, 0, value.Length, writer);
+      }
+   }
+
+   public void Convert(char[] chars, TextWriter writer)
+   {
+      ArgumentNullException.ThrowIfNull(chars);
+      ArgumentNullException.ThrowIfNull(writer);
+      ConvertUnchecked((ReadOnlySpan<char>)chars, 0, chars.Length, writer);
    }
 
    public void Convert(char[] chars, int index, int count, TextWriter writer)
+   {
+      ArgumentNullException.ThrowIfNull(chars);
+      Convert((ReadOnlySpan<char>)chars, index, count, writer);
+   }
+
+   public void Convert(ReadOnlySpan<char> chars, int index, int count, TextWriter writer)
+   {
+      ArgumentNullException.ThrowIfNull(writer);
+      ArgumentOutOfRangeException.ThrowIfNegative(index);
+      ArgumentOutOfRangeException.ThrowIfNegative(count);
+      ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, chars.Length);
+      ArgumentOutOfRangeException.ThrowIfGreaterThan(count, chars.Length - index);
+      ConvertUnchecked(chars, index, count, writer);
+   }
+
+   public void ConvertUnchecked(ReadOnlySpan<char> chars, int index, int count, TextWriter writer)
    {
       for (int i = 0; i < count; i++)
       {
@@ -150,7 +272,22 @@ public sealed partial class UnicodeDetoxConverter
       }
    }
 
-   public void FlushLine(TextWriter writer)
+   public void Flush(TextWriter writer)
+   {
+      ArgumentNullException.ThrowIfNull(writer);
+      FlushLine(writer);
+   }
+
+   public void Reset()
+   {
+      ResetLine();
+      _lineChunks = null;
+      _isFenced = false;
+      _fenceChar = '\0';
+      _fenceLength = 0;
+   }
+
+   private void FlushLine(TextWriter writer)
    {
       if (_lineBuffer.Length > 0)
       {
@@ -183,13 +320,23 @@ public sealed partial class UnicodeDetoxConverter
       ResetLine();
    }
 
+   private void ResetLine()
+   {
+      _lineBuffer.Clear();
+      _hasCR = false;
+      _hasLF = false;
+      _hasLeadingNonSyntax = false;
+      _hasBacktick = false;
+      _hasTilde = false;
+   }
+
    private void ProcessLine(TextWriter writer)
    {
       if (_lineChunks == null)
       {
          _lineChunks = new List<ReadOnlyMemory<char>>();
       }
-      foreach(var chunk in _lineBuffer.GetChunks())
+      foreach (var chunk in _lineBuffer.GetChunks())
       {
          _lineChunks.Add(chunk);
       }
@@ -197,6 +344,8 @@ public sealed partial class UnicodeDetoxConverter
       bool isInlineCode = false;
       int openingTickCount = 0;
       int currentTickCount = 0;
+      int pendingEmDashCount = 0;
+      int pos1 = -2;
       char ch0 = '\0';
       char ch1 = '\0';
       char ch2 = '\0';
@@ -207,20 +356,45 @@ public sealed partial class UnicodeDetoxConverter
          var length = span.Length;
          for (int i = 0; i < length; i++)
          {
+            var ch = span[i];
+
+            pos1++;
+
+            if (pendingEmDashCount > 0 && ch == EM_DASH)
+            {
+               // extend emdash-run without rotating ch2,ch1,ch0 to preserve context
+               pendingEmDashCount++;
+               continue;
+            }
+
             ch2 = ch1;
             ch1 = ch0;
-            ch0 = span[i];
+            ch0 = ch;
 
-            if (ch1 == EM_DASH)
+            if (pendingEmDashCount > 0)
             {
-               // if previous char was emdash, we have not written it yet
-               if (NonZeroWidthSpaces.Contains(ch2) && NonZeroWidthSpaces.Contains(ch0))
+               // check emdash-run surroundings
+               bool noSpaceLeft = (pos1 == 0) || !NonZeroWidthSpaces.Contains(ch2);
+               bool noSpaceRight = !NonZeroWidthSpaces.Contains(ch0);
+               bool insertSpace = noSpaceLeft && noSpaceRight;
+
+               if (insertSpace && (pos1 > 0))
+               {
+                  // insert padding before
+                  writer.Write(' ');
+               }
+
+               // emit detoxed emdash-run
+               do
                {
                   writer.Write('-');
                }
-               else
+               while (--pendingEmDashCount > 0);
+
+               if (insertSpace)
                {
-                  writer.Write(" - ");
+                  // insert padding before
+                  writer.Write(' ');
                }
             }
 
@@ -260,10 +434,11 @@ public sealed partial class UnicodeDetoxConverter
             }
             else if (ch0 == EM_DASH)
             {
-               // we will write the emdash in the next round when we know what the next character is
+               // we will write the emdash later when we know what the next non-emdash character is
+               pendingEmDashCount++;
                continue;
             }
-            else if (AsciiMap.TryGetValue(ch0, out var detox))
+            else if (DetoxMap.TryGetValue(ch0, out var detox))
             {
                writer.Write(detox);
             }
@@ -276,7 +451,21 @@ public sealed partial class UnicodeDetoxConverter
 
       _lineChunks.Clear();
 
-      if (ch0 == EM_DASH) writer.Write(EM_DASH);
+      if (pendingEmDashCount > 0)
+      {
+         if (!NonZeroWidthSpaces.Contains(ch1))
+         {
+            // insert padding before
+            writer.Write(' ');
+         }
+
+         // emit detoxed emdash-run
+         do
+         {
+            writer.Write('-');
+         }
+         while (--pendingEmDashCount > 0);
+      }
    }
 
    private bool FindTickRun(int chunkIndex, ReadOnlySpan<char> span, int startIndex, int exactTickCount)

@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "UnicodeDetox": {
+      "commandName": "Project",
+      "commandLineArgs": "< c:\\Dev\\sandbox-papers\\papers\\agentic-vm.md > c:\\Dev\\sandbox-papers\\papers\\agentic-vm.clean.md"
+      /*"commandLineArgs": "< c:\\Dev\\UnicodeDetoxTest\\new-line-test.md > c:\\Dev\\UnicodeDetoxTest\\new-line-test.clean.md"*/
+    }
+  }
+}
