@@ -11,6 +11,11 @@ public static class UnicodeDetox
       return UnicodeDetoxConverter.Convert(ch);
    }
 
+   public static string Detox(char? prevCh, char ch, char? nextCh)
+   {
+      return UnicodeDetoxConverter.Convert(prevCh, ch, nextCh);
+   }
+
    public static string? Detox(string? value)
    {
       if (value == null)

@@ -15,12 +15,14 @@ public sealed partial class UnicodeDetoxConverter
       public const string QUOTATION_MARK = "\"";
       public const string APOSTROPHE = "'";
       public const string ANGLE_BRACKET_L = "<";
-      public const string ANGLE_BRACKET_R = "<";
+      public const string ANGLE_BRACKET_R = ">";
       public const string DBL_ANGLE_BRACKET_L = "<<";
-      public const string DBL_ANGLE_BRACKET_R = "<<";
+      public const string DBL_ANGLE_BRACKET_R = ">>";
       public const string DASH = "-";
       public const string DBL_DASH = "--";
-      public const string DASH_WITH_SPACES = " - ";
+      public const string DASH_WITH_SPACE_L = " -";
+      public const string DASH_WITH_SPACE_R = "- ";
+      public const string DASH_WITH_SPACE_LR = " - ";
       public const string ASTERISK = "*";
       public const string TRIPLE_DOT = "...";
       public const string ARROW_L = "<-";
@@ -32,6 +34,9 @@ public sealed partial class UnicodeDetoxConverter
       public const string PIPE = "|";
       public const string SLASH = "/";
       public const string BACKSLASH = "\\";
+      public const string OK_IN_BRACKETS = "[OK]";
+      public const string X_IN_BRACKETS = "[X]";
+      public const string TIMES = "x";
    }
 
    // Mapping table for typographic Unicode -> ASCII
@@ -120,10 +125,10 @@ public sealed partial class UnicodeDetoxConverter
       ['\u29F9'] = DetoxString.BACKSLASH,             // BIG REVERSE SOLIDUS
       ['\uFF3C'] = DetoxString.BACKSLASH,             // FULLWIDTH REVERSE SOLIDUS
 
-      ['\u2713'] = "[OK]",                            // CHECK MARK
-      ['\u2717'] = "[X]",                             // BALLOT X
+      ['\u2713'] = DetoxString.OK_IN_BRACKETS,        // CHECK MARK
+      ['\u2717'] = DetoxString.X_IN_BRACKETS,         // BALLOT X
 
-      ['\u00D7'] = "x",                               // MULTIPLICATION SIGN
+      ['\u00D7'] = DetoxString.TIMES,                 // MULTIPLICATION SIGN
    };
 
    private static readonly HashSet<char> NonZeroWidthSpaces = new HashSet<char>()
@@ -177,7 +182,13 @@ public sealed partial class UnicodeDetoxConverter
    private bool _isFenced;
    private char _fenceChar;
    private int _fenceLength;
-
+   
+   /// <summary>
+   /// Gets detox mapping for the specified character without any context information. Automatic padding of em-dash 
+   /// characters is not supported.
+   /// </summary>
+   /// <param name="ch">The character to detox</param>
+   /// <returns>The replacement string for the sepcified character</returns>
    public static string Convert(char ch)
    {
       if (ch == EM_DASH)
@@ -192,6 +203,57 @@ public sealed partial class UnicodeDetoxConverter
       {
          return ch.ToString();
       }
+   }
+
+   /// <summary>
+   /// Gets detox mapping for the specified character with the previous and the next character in the stream as 
+   /// optional context.
+   /// 
+   /// Automatic padding of em-dash characters with space is partially supported, excep one edge case: 
+   /// 
+   /// Sequences of multiple em-dash characters always get padded with space on each side that has context, even 
+   /// if in the original stream the em-dash run was padded on one side only. Padding character is never inserted
+   /// at the begining or at the end of the stream.
+   ///
+   /// This edge case can only be handled correctly with internal state; if this behavior is important, please use
+   /// the stateful API.
+   /// </summary>
+   /// <param name="prevCh">The previous character, or null if there is no previous character</param>
+   /// <param name="ch">The character to detox</param>
+   /// <param name="nextCh">The next character, or null if there is no more characters</param>
+   /// <returns>The replacement string for the sepcified character</returns>
+   public static string Convert(char? prevCh, char ch, char? nextCh)
+   {
+      if (ch == EM_DASH)
+      {
+         // check emdash surroundings
+         bool noSpaceLeft = !prevCh.HasValue || !NonZeroWidthSpaces.Contains(prevCh.Value);
+         bool noSpaceRight = !nextCh.HasValue || !NonZeroWidthSpaces.Contains(nextCh.Value);
+         bool blockSpaceLeft = !prevCh.HasValue || prevCh.Value == EM_DASH;
+         bool blockSpaceRight = !nextCh.HasValue || nextCh.Value == EM_DASH;
+
+         if (noSpaceLeft && noSpaceRight)
+         {
+            if (blockSpaceLeft)
+            {
+               return blockSpaceRight 
+                  ? DetoxString.DASH 
+                  : DetoxString.DASH_WITH_SPACE_R;
+            }
+            else
+            {
+               return blockSpaceRight
+                  ? DetoxString.DASH_WITH_SPACE_L
+                  : DetoxString.DASH_WITH_SPACE_LR;
+            }
+         }
+
+         return DetoxString.DASH;
+      }
+
+      return (ch >= 0x80) && DetoxMap.TryGetValue(ch, out var result) 
+         ? result 
+         : ch.ToString();
    }
 
    public void Convert(string? value, TextWriter writer)
@@ -393,7 +455,7 @@ public sealed partial class UnicodeDetoxConverter
 
                if (insertSpace)
                {
-                  // insert padding before
+                  // insert padding after
                   writer.Write(' ');
                }
             }

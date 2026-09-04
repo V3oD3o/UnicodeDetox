@@ -39,6 +39,7 @@ public class UnicodeDetoxTests
    [TestCase("\u2014", "-", "standalone: '-'")]
    [TestCase("\u2014\u2014", "--", "multi standalone: '--'")]
    [TestCase("\u2014\u2014\u2014", "---", "multi standalone: '---'")]
+
    [TestCase("foo\u2014bar", "foo - bar", "sticky: 'foo-bar'")]
    [TestCase("\u2014bar", "- bar", "sticky: '-bar'")]
    [TestCase("foo\u2014", "foo -", "sticky: 'foo-'")]
@@ -64,6 +65,31 @@ public class UnicodeDetoxTests
    public void EmdashNormalization(string input, string expected, string description)
    {
       Assert.That(UnicodeDetox.Detox(input), Is.EqualTo(expected), description);
+   }
+
+
+   [TestCase(' ', '\u2014', ' ', "-")]
+   [TestCase(' ', '\u2014', 'a', "-")]
+   [TestCase(' ', '\u2014', null, "-")]
+   [TestCase(' ', '\u2014', '\u2014', "-")]
+   
+   [TestCase('a', '\u2014', ' ', "-")]
+   [TestCase('a', '\u2014', 'a', " - ")]
+   [TestCase('a', '\u2014', null, " -")]
+   [TestCase('a', '\u2014', '\u2014', " -")]
+   
+   [TestCase(null, '\u2014', ' ', "-")]
+   [TestCase(null, '\u2014', 'a', "- ")]
+   [TestCase(null, '\u2014', null, "-")]
+   [TestCase(null, '\u2014', '\u2014', "-")]
+   
+   [TestCase('\u2014', '\u2014', ' ', "-")]
+   [TestCase('\u2014', '\u2014', 'a', "- ")]
+   [TestCase('\u2014', '\u2014', null, "-")]
+   [TestCase('\u2014', '\u2014', '\u2014', "-")]
+   public void EmdashNormalization(char? prevCh, char ch, char? nextCh, string expected)
+   {
+      Assert.That(UnicodeDetox.Detox(prevCh, ch, nextCh), Is.EqualTo(expected));
    }
 
    // ---------------------------------------------------------
